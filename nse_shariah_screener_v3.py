@@ -295,14 +295,14 @@ def update_google_sheets(all_results: list[dict], passed: list[dict]):
         ]
         rows = [headers]
         for r in all_results:
-            rows.append([
-                r["symbol"], r["timestamp"], r["current_price"], r["high_52w"],
-                f"{r['pct_below_high']*100:.1f}%" if r["pct_below_high"] else "",
-                r["de_ratio"], r["revenue_growth"],
-                r["pe_current"], r["pe_5yr_avg"], r["pe_discount_pct"],
-                r["pass_price"], r["pass_de"], r["pass_revenue"], r["pass_pe"],
-                r["all_pass"], r.get("error", ""),
-            ])
+           rows.append([
+    r["symbol"], r["timestamp"], r["current_price"], r["high_52w"],
+    f"{r['pct_below_high']*100:.1f}%" if r["pct_below_high"] else "",
+    r["de_ratio"], r["revenue_growth"],
+    r["pe_current"], r["pe_5yr_avg"], r["pe_discount_pct"],
+    str(r["pass_price"]), str(r["pass_de"]), str(r["pass_revenue"]), str(r["pass_pe"]),
+    str(r["all_pass"]), r.get("error", ""),
+])
         ws.update(rows, value_input_option="USER_ENTERED")
         log.info(f"Fundamentals tab: {len(all_results)} rows written.")
 
@@ -316,12 +316,14 @@ def update_google_sheets(all_results: list[dict], passed: list[dict]):
         ]
         res_rows = [res_headers]
         for r in passed:
-            res_rows.append([
-                r["symbol"], r["timestamp"], r["current_price"], r["high_52w"],
-                f"{r['pct_below_high']*100:.1f}%" if r["pct_below_high"] else "",
-                r["de_ratio"], r["revenue_growth"],
-                r["pe_current"], r["pe_5yr_avg"], r["pe_discount_pct"],
-            ])
+            rows.append([
+    r["symbol"], r["timestamp"], r["current_price"], r["high_52w"],
+    f"{r['pct_below_high']*100:.1f}%" if r["pct_below_high"] else "",
+    r["de_ratio"], r["revenue_growth"],
+    r["pe_current"], r["pe_5yr_avg"], r["pe_discount_pct"],
+    str(r["pass_price"]), str(r["pass_de"]), str(r["pass_revenue"]), str(r["pass_pe"]),
+    str(r["all_pass"]), r.get("error", ""),
+])
         ws.update(res_rows, value_input_option="USER_ENTERED")
         log.info(f"Results tab: {len(passed)} qualifying stocks.")
 
