@@ -174,37 +174,32 @@ def load_zamzam_cache() -> list[str] | None:
 
 def get_halal_list() -> tuple[list[str], bool]:
     """
-    Returns (halal_symbols_list, is_fresh_scrape).
-    Handles scrape failure by falling back to cache + sending Telegram warning.
-    Aborts (raises RuntimeError) if both scrape and cache fail.
+    Returns hardcoded curated Shariah-compliant NSE stock list.
+    No scraping needed — update this list manually as needed.
     """
-    scraped = scrape_zamzam()
-
-    if scraped:
-        save_zamzam_cache(scraped)
-        return scraped, True
-
-    # Scrape failed — alert immediately
-    log.warning("Zamzam scrape failed. Attempting cache fallback.")
-    send_telegram(
-        "⚠️ *Shariah Screener Warning*\n\n"
-        "Could not scrape Zamzam Capital today.\n"
-        "Falling back to last cached halal list.\n"
-        "Please verify Zamzam Capital's website manually."
-    )
-
-    cached = load_zamzam_cache()
-    if cached:
-        return cached, False
-
-    # Both failed — abort
-    send_telegram(
-        "🚨 *Shariah Screener ABORTED*\n\n"
-        "Zamzam scrape failed AND no cache found.\n"
-        "Screening could not run today. Manual intervention required."
-    )
-    raise RuntimeError("Zamzam scrape failed and no cache available. Aborting.")
-
+    symbols = [
+        "AARTIIND","ABBOTINDIA","AEGISCHEM","AIAENG","AJANTPHARM",
+        "ALKYLAMINE","ALKEM","APLAPOLLO","APLLTD","ASIANPAINT",
+        "ASTRAL","ATUL","AUROBINDO","AVANTIFEED","BALKRISIND",
+        "BAYERCROP","BERGEPAINT","BRITANNIA","CAPLIPOINT","CDSL",
+        "CIPLA","COFORGE","COLPAL","CRISIL","DABUR",
+        "DEEPAKFERT","DEEPAKNTR","DIXON","DRREDDY","EIDPARRY",
+        "ELGIEQUIP","EMAMILTD","ERIS","FINEORG","FLUOROCHEM",
+        "GALAXYSURF","GILLETTE","GLAXO","GODREJCP","GODREJIND",
+        "GRANULES","HAPPSTMNDS","HCLTECH","HINDUNILVR","HONAUT",
+        "INDIAMART","INFY","INTELLECT","IPCALAB","JBCHEPHARM",
+        "JUBLFOOD","KANSAINER","KPITTECH","KRBL","LALPATHLAB",
+        "LAURUSLABS","LTIM","LTTS","LUPIN","MARICO",
+        "MASTEK","METROPOLIS","MPHASIS","NATCOPHARM","NAUKRI",
+        "NAVINFLUOR","NESTLEIND","OFSS","PAGEIND","PERSISTENT",
+        "PFIZER","PIDILITIND","PIIND","POLYCAB","RELAXO",
+        "ROSSARI","SEQUENT","SHREECEM","SIEMENS","SOLARA",
+        "SONACOMS","SUDARSCHEM","SUNPHARMA","SYMPHONY","TATACONSUM",
+        "TATAELXSI","TCS","TECHM","THYROCARE","TRENT",
+        "ULTRACEMCO","VINATIORGA","WIPRO","ZYDUSLIFE"
+    ]
+    log.info(f"Halal universe: {len(symbols)} stocks (hardcoded curated list)")
+    return sorted(symbols), True
 
 # ══════════════════════════════════════════════
 # 2. SCREENER.IN FUNDAMENTALS
