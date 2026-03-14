@@ -27,7 +27,7 @@ jobs:
       - name: Run screener
         env:
           GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-        run: python nse_shariah_screener_v2.py
+        run: python nse_shariah_screener_v3.py
 
       - name: Upload logs
         if: always()
