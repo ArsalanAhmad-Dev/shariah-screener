@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0a1628" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Halal Screener" />
+  <title>Halal Stock Screener</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:        #0a1628;
+      --bg2:       #0f1e38;
+      --bg3:       #152440;
+      --gold:      #c9a84c;
+      --gold2:     #e8c96a;
+      --green:     #2ecc71;
+      --red:       #e74c3c;
+      --muted:     #4a6080;
+      --text:      #d4e0f0;
+      --text2:     #8aa8cc;
+      --border:    rgba(201,168,76,0.15);
+      --radius:    12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Islamic geometric background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(60deg, transparent, transparent 40px, rgba(201,168,76,0.02) 40px, rgba(201,168,76,0.02) 41px),
+        repeating-linear-gradient(-60deg, transparent, transparent 40px, rgba(201,168,76,0.02) 40px, rgba(201,168,76,0.02) 41px),
+        repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(201,168,76,0.015) 40px, rgba(201,168,76,0.015) 41px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 0 80px; }
+
+    /* ── Header ── */
+    .header {
+      padding: 48px 20px 24px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header .bismillah {
+      font-family: 'Amiri', serif;
+      font-size: 22px;
+      color: var(--gold);
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+      opacity: 0.85;
+    }
+
+    .header h1 {
+      font-family: 'Amiri', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gold2);
+      letter-spacing: 1px;
+      line-height: 1.2;
+    }
+
+    .header .subtitle {
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .last-updated {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--bg3);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Summary cards ── */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 20px 16px;
+    }
+
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 10px;
+      text-align: center;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .stat-card:nth-child(2) { animation-delay: 0.1s; }
+    .stat-card:nth-child(3) { animation-delay: 0.2s; }
+
+    .stat-card .num {
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--gold2);
+      line-height: 1;
+    }
+
+    .stat-card .num.green { color: var(--green); }
+    .stat-card .num.red   { color: var(--red); }
+
+    .stat-card .label {
+      font-size: 9px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 4px;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 0 16px 16px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: var(--gold);
+      color: var(--bg);
+      border-color: var(--gold);
+      font-weight: 500;
+    }
+
+    /* ── Stock cards ── */
+    .section { padding: 0 16px; }
+
+    .section-title {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .stock-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      overflow: hidden;
+      animation: fadeUp 0.3s ease both;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .stock-card:active { transform: scale(0.98); }
+    .stock-card:hover  { border-color: rgba(201,168,76,0.4); }
+
+    .stock-card.passed { border-left: 3px solid var(--green); }
+    .stock-card.failed { border-left: 3px solid var(--muted); }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px 10px;
+    }
+
+    .card-header .symbol {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--gold2);
+      letter-spacing: 1px;
+    }
+
+    .card-header .price {
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    .card-header .badge {
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .badge.pass { background: rgba(46,204,113,0.15); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
+    .badge.fail { background: rgba(74,96,128,0.2);  color: var(--muted); border: 1px solid rgba(74,96,128,0.3); }
+
+    /* ── Score bar ── */
+    .score-bar {
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .score-track {
+      flex: 1;
+      height: 4px;
+      background: var(--bg3);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .score-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.6s ease;
+    }
+
+    .score-num {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gold2);
+      min-width: 40px;
+      text-align: right;
+    }
+
+    .verdict-badge {
+      font-size: 10px;
+      color: var(--text2);
+    }
+
+    .card-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--border);
+    }
+
+    .metric {
+      padding: 10px 8px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+
+    .metric:last-child { border-right: none; }
+
+    .metric .val {
+      font-size: 12px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .metric .val.good { color: var(--green); }
+    .metric .val.bad  { color: var(--red); }
+    .metric .val.na   { color: var(--muted); }
+
+    .metric .key {
+      font-size: 8px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 3px;
+    }
+
+    /* ── Detail modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 24px 20px 40px;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    .modal-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--muted);
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+
+    .modal-symbol {
+      font-family: 'Amiri', serif;
+      font-size: 32px;
+      color: var(--gold2);
+      margin-bottom: 4px;
+    }
+
+    .modal-price {
+      font-size: 24px;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .detail-item {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .detail-item .d-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+
+    .detail-item .d-val {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .detail-item .d-val.good { color: var(--green); }
+    .detail-item .d-val.bad  { color: var(--red); }
+    .detail-item .d-val.na   { color: var(--muted); font-size: 13px; }
+
+    .detail-item .d-status {
+      font-size: 9px;
+      margin-top: 4px;
+      color: var(--muted);
+    }
+
+    .filter-checks {
+      margin-bottom: 20px;
+    }
+
+    .filter-checks .fc-title {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+
+    .check-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .check-row:last-child { border-bottom: none; }
+
+    .check-icon { font-size: 14px; }
+
+    .verdict {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .verdict .v-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text2);
+      margin-bottom: 8px;
+    }
+
+    .verdict .v-text {
+      font-family: 'Amiri', serif;
+      font-size: 22px;
+      color: var(--gold2);
+    }
+
+    /* ── Loading ── */
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text2);
+    }
+
+    .loading .spinner {
+      width: 40px;
+      height: 40px;
+      border: 2px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    .loading p { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    /* ── Refresh button ── */
+    .refresh-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 20px;
+      width: 52px;
+      height: 52px;
+      background: var(--gold);
+      border: none;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(201,168,76,0.4);
+      z-index: 50;
+      transition: transform 0.2s;
+    }
+
+    .refresh-btn:active { transform: scale(0.9) rotate(180deg); }
+
+    /* ── Error banner ── */
+    .error-banner {
+      margin: 0 16px 16px;
+      padding: 12px 16px;
+      background: rgba(231,76,60,0.1);
+      border: 1px solid rgba(231,76,60,0.3);
+      border-radius: var(--radius);
+      font-size: 11px;
+      color: #e74c3c;
+      display: none;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      padding: 0 16px 16px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .filter-bar::-webkit-scrollbar { display: none; }
+
+    .filter-chip {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-chip.active {
+      background: rgba(201,168,76,0.15);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .close-modal {
+      float: right;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="bismillah">بِسْمِ اللهِ</div>
+    <h1>Halal Stock Screener</h1>
+    <div class="subtitle">NSE · Shariah Compliant</div>
+    <div class="last-updated" id="lastUpdated">Loading...</div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="stat-card">
+      <div class="num" id="totalScreened">—</div>
+      <div class="label">Screened</div>
+    </div>
+    <div class="stat-card">
+      <div class="num green" id="totalPassed">—</div>
+      <div class="label">Passed</div>
+    </div>
+    <div class="stat-card">
+      <div class="num red" id="totalFailed">—</div>
+      <div class="label">Filtered</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('passed')">✅ Passed</button>
+    <button class="tab" onclick="switchTab('all')">📋 All Stocks</button>
+  </div>
+
+  <!-- Filter chips -->
+  <div class="filter-bar" id="filterBar" style="display:none">
+    <button class="filter-chip active" onclick="setFilter('all')">All</button>
+    <button class="filter-chip" onclick="setFilter('price')">Price ✗</button>
+    <button class="filter-chip" onclick="setFilter('de')">D/E ✗</button>
+    <button class="filter-chip" onclick="setFilter('revenue')">Revenue ✗</button>
+    <button class="filter-chip" onclick="setFilter('pe')">PE ✗</button>
+  </div>
+
+  <!-- Error -->
+  <div class="error-banner" id="errorBanner"></div>
+
+  <!-- Stock list -->
+  <div class="section">
+    <div class="section-title" id="sectionTitle">Qualifying Stocks</div>
+    <div id="stockList">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading from Google Sheets</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Refresh button -->
+<button class="refresh-btn" onclick="loadData()" title="Refresh">↻</button>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modalContent">
+    <div class="modal-handle"></div>
+    <button class="close-modal" onclick="document.getElementById('modalOverlay').classList.remove('open')">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+// Replace with your actual Google Sheet ID and make the sheet PUBLIC (view only)
+// Sheet → Share → Anyone with link → Viewer
+const SHEET_ID  = 'YOUR_GOOGLE_SHEET_ID';
+const SHEET_TAB = 'Fundamentals'; // reads from Fundamentals tab
+
+// ── STATE ─────────────────────────────────────────────────────
+let allStocks   = [];
+let currentTab  = 'passed';
+let currentFilter = 'all';
+
+// ── DATA LOADING ──────────────────────────────────────────────
+async function loadData() {
+  showLoading();
+  hideError();
+
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB)}`;
+    const res  = await fetch(url);
+    const text = await res.text();
+
+    // Google wraps response in /*O_o*/google.visualization.Query.setResponse(...)
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table.rows;
+    const cols = json.table.cols.map(c => c.label);
+
+    allStocks = rows.slice(1).map(row => {
+      const obj = {};
+      cols.forEach((col, i) => {
+        obj[col] = row.c[i]?.v ?? null;
+      });
+      return obj;
+    }).filter(s => s['Symbol']);
+
+    updateSummary();
+    renderList();
+    updateLastUpdated();
+
+  } catch (err) {
+    showError('Could not load data. Make sure your Google Sheet is set to public (Anyone with link → Viewer).');
+    console.error(err);
+  }
+}
+
+// ── SUMMARY ───────────────────────────────────────────────────
+function updateSummary() {
+  const passed = allStocks.filter(s => s['All Pass'] === true || s['All Pass'] === 'TRUE');
+  document.getElementById('totalScreened').textContent = allStocks.length;
+  document.getElementById('totalPassed').textContent   = passed.length;
+  document.getElementById('totalFailed').textContent   = allStocks.length - passed.length;
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  currentFilter = 'all';
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'passed') || (i === 1 && tab === 'all'));
+  });
+  document.getElementById('filterBar').style.display = tab === 'all' ? 'flex' : 'none';
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelector('.filter-chip')?.classList.add('active');
+  renderList();
+}
+
+// ── FILTER ────────────────────────────────────────────────────
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  renderList();
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function renderList() {
+  let stocks = [...allStocks];
+
+  if (currentTab === 'passed') {
+    stocks = stocks.filter(s => s['All Pass'] === true || s['All Pass'] === 'TRUE');
+    document.getElementById('sectionTitle').textContent = `Qualifying Stocks`;
+  } else {
+    document.getElementById('sectionTitle').textContent = `All Screened Stocks`;
+    if (currentFilter === 'price')   stocks = stocks.filter(s => !(s['Pass Price'] === true || s['Pass Price'] === 'TRUE'));
+    if (currentFilter === 'de')      stocks = stocks.filter(s => !(s['Pass D/E']   === true || s['Pass D/E']   === 'TRUE'));
+    if (currentFilter === 'revenue') stocks = stocks.filter(s => !(s['Pass Revenue'] === true || s['Pass Revenue'] === 'TRUE'));
+    if (currentFilter === 'pe')      stocks = stocks.filter(s => !(s['Pass PE']    === true || s['Pass PE']    === 'TRUE'));
+  }
+
+  if (!stocks.length) {
+    document.getElementById('stockList').innerHTML =
+      `<div class="empty">No stocks match this filter</div>`;
+    return;
+  }
+
+  document.getElementById('stockList').innerHTML = stocks.map((s, i) => {
+    const passed    = s['All Pass'] === true || s['All Pass'] === 'TRUE';
+    const drop      = s['% Below High'] || '—';
+    const de        = s['D/E Ratio']    != null ? s['D/E Ratio'].toFixed(2)  : '—';
+    const revGrowth = s['Revenue Growth (%)'] != null ? s['Revenue Growth (%)'].toFixed(1) + '%' : '—';
+    const pe        = s['PE Current']   != null ? s['PE Current'].toFixed(1)  : '—';
+    const peDisc    = s['PE Discount (%)'] != null ? s['PE Discount (%)'].toFixed(1) + '%' : '—';
+
+    const deGood  = s['D/E Ratio'] != null && s['D/E Ratio'] < 0.33;
+    const revGood = s['Revenue Growth (%)'] != null && s['Revenue Growth (%)'] > 0;
+    const peGood  = s['PE Discount (%)'] != null && s['PE Discount (%)'] >= 20;
+    const priceGood = typeof drop === 'string' && parseFloat(drop) >= 20;
+
+    return `
+    <div class="stock-card ${passed ? 'passed' : 'failed'}"
+         style="animation-delay:${i * 0.04}s"
+         onclick="openModal(${JSON.stringify(s).replace(/'/g, '&apos;')})">
+      <div class="card-header">
+        <div>
+          <div class="symbol">${s['Symbol']}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">₹${s['Current Price (₹)'] ?? '—'}</div>
+        </div>
+        <span class="badge ${passed ? 'pass' : 'fail'}">${passed ? 'Pass' : 'Review'}</span>
+      </div>
+      <div class="card-metrics">
+        <div class="metric">
+          <div class="val ${priceGood ? 'good' : 'bad'}">${drop}</div>
+          <div class="key">Below High</div>
+        </div>
+        <div class="metric">
+          <div class="val ${deGood ? 'good' : de === '—' ? 'na' : 'bad'}">${de}</div>
+          <div class="key">D/E</div>
+        </div>
+        <div class="metric">
+          <div class="val ${revGood ? 'good' : revGrowth === '—' ? 'na' : 'bad'}">${revGrowth}</div>
+          <div class="key">Rev Growth</div>
+        </div>
+        <div class="metric">
+          <div class="val ${peGood ? 'good' : peDisc === '—' ? 'na' : 'bad'}">${peDisc}</div>
+          <div class="key">PE Disc</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── MODAL ─────────────────────────────────────────────────────
+function openModal(s) {
+  const passed   = s['All Pass'] === true || s['All Pass'] === 'TRUE';
+  const pPrice   = s['Pass Price']   === true || s['Pass Price']   === 'TRUE';
+  const pDE      = s['Pass D/E']     === true || s['Pass D/E']     === 'TRUE';
+  const pRev     = s['Pass Revenue'] === true || s['Pass Revenue'] === 'TRUE';
+  const pPE      = s['Pass PE']      === true || s['Pass PE']      === 'TRUE';
+
+  const score = [pPrice, pDE, pRev, pPE].filter(Boolean).length;
+  const verdicts = ['Weak — Avoid', 'Borderline — Watch', 'Moderate — Consider', 'Strong — Research Further', '⭐ Top Pick — Deep Dive'];
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-symbol">${s['Symbol']}</div>
+    <div class="modal-price">₹${s['Current Price (₹)'] ?? '—'}
+      <span style="font-size:14px;color:var(--text2);margin-left:8px">52W High ₹${s['52W High (₹)'] ?? '—'}</span>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-item">
+        <div class="d-label">% Below 52W High</div>
+        <div class="d-val ${pPrice ? 'good' : 'bad'}">${s['% Below High'] || '—'}</div>
+        <div class="d-status">Threshold: ≥ 20%</div>
+      </div>
+      <div class="detail-item">
+        <div class="d-label">Debt / Equity</div>
+        <div class="d-val ${pDE ? 'good' : s['D/E Ratio'] == null ? 'na' : 'bad'}">
+          ${s['D/E Ratio'] != null ? s['D/E Ratio'].toFixed(3) : 'N/A'}
+        </div>
+        <div class="d-status">Threshold: &lt; 0.33</div>
+      </div>
+      <div class="detail-item">
+        <div class="d-label">Revenue Growth</div>
+        <div class="d-val ${pRev ? 'good' : s['Revenue Growth (%)'] == null ? 'na' : 'bad'}">
+          ${s['Revenue Growth (%)'] != null ? s['Revenue Growth (%)'].toFixed(1) + '%' : 'N/A'}
+        </div>
+        <div class="d-status">Threshold: &gt; 0%</div>
+      </div>
+      <div class="detail-item">
+        <div class="d-label">PE Discount</div>
+        <div class="d-val ${pPE ? 'good' : s['PE Discount (%)'] == null ? 'na' : 'bad'}">
+          ${s['PE Discount (%)'] != null ? s['PE Discount (%)'].toFixed(1) + '%' : 'N/A'}
+        </div>
+        <div class="d-status">Current ${s['PE Current'] ?? '—'} vs 5yr avg ${s['PE 5yr Avg'] ?? '—'}</div>
+      </div>
+    </div>
+
+    <div class="filter-checks">
+      <div class="fc-title">Filter Checklist</div>
+      ${[
+        ['Price below 52W high ≥ 20%', pPrice],
+        ['Debt/Equity < 0.33', pDE],
+        ['Revenue growth positive', pRev],
+        ['PE ≥ 20% below 5yr average', pPE],
+      ].map(([label, pass]) => `
+        <div class="check-row">
+          <span>${label}</span>
+          <span class="check-icon">${pass ? '✅' : '❌'}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="verdict">
+      <div class="v-label">Screener Verdict</div>
+      <div class="v-text">${verdicts[score]}</div>
+    </div>
+
+    <div style="margin-top:16px;font-size:10px;color:var(--muted);text-align:center;line-height:1.6">
+      Last screened: ${s['Timestamp'] ?? '—'}<br>
+      ☪️ Shariah-verified · Curated halal list
+    </div>
+  `;
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function showLoading() {
+  document.getElementById('stockList').innerHTML =
+    `<div class="loading"><div class="spinner"></div><p>Fetching latest data</p></div>`;
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorBanner');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('errorBanner').style.display = 'none';
+}
+
+function updateLastUpdated() {
+  const timestamps = allStocks.map(s => s['Timestamp']).filter(Boolean);
+  if (timestamps.length) {
+    const latest = timestamps.sort().reverse()[0];
+    document.getElementById('lastUpdated').textContent = `Updated: ${latest}`;
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>
