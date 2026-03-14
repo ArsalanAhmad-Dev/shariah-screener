@@ -1,1 +1,38 @@
+name: Shariah Screener
 
+on:
+  schedule:
+    - cron: '0 11 * * 1-5'  # 4:30 PM IST (11:00 UTC), weekdays only
+  workflow_dispatch:          # allows manual trigger from GitHub UI
+
+jobs:
+  run-screener:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write credentials.json
+        run: echo '${{ secrets.GOOGLE_CREDENTIALS }}' > credentials.json
+
+      - name: Run screener
+        env:
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: python nse_shariah_screener_v2.py
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screener-logs
+          path: screener.log
+          retention-days: 7
