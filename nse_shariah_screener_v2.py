@@ -41,7 +41,7 @@ from google.oauth2.service_account import Credentials
 # ─────────────────────────────────────────────
 TELEGRAM_TOKEN   = "8536746285:AAFqZg7j39T-4RcQM9Z-7ZcTn9y2juuqRMY"
 TELEGRAM_CHAT_ID = "835287998"
-GOOGLE_SHEET_ID  = "os.environ.get("GOOGLE_SHEET_ID", "YOUR_FALLBACK_ID")"       # ← paste your Sheet ID
+GOOGLE_SHEET_ID  = "os.environ.get("GOOGLE_SHEET_ID", "1VEt5UTJi8owOFA5fbmZd42a7n59sanOVPDLIscLe4Kw")"       # ← paste your Sheet ID
 CREDENTIALS_FILE = "credentials.json"            # ← path to your JSON key file
 ZAMZAM_CACHE     = "zamzam_cache.json"           # auto-managed, do not edit
 
