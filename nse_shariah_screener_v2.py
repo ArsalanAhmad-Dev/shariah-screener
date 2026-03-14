@@ -39,11 +39,11 @@ from google.oauth2.service_account import Credentials
 # ─────────────────────────────────────────────
 # CONFIGURATION
 # ─────────────────────────────────────────────
-TELEGRAM_TOKEN   = 8536746285:AAFqZg7j39T-4RcQM9Z-7ZcTn9y2juuqRMY
-TELEGRAM_CHAT_ID = 835287998
+TELEGRAM_TOKEN   = "8536746285:AAFqZg7j39T-4RcQM9Z-7ZcTn9y2juuqRMY"
+TELEGRAM_CHAT_ID = "835287998"
 GOOGLE_SHEET_ID  = os.environ.get("GOOGLE_SHEET_ID", "1VEt5UTJi8owOFA5fbmZd42a7n59sanOVPDLIscLe4Kw")       
-CREDENTIALS_FILE = credentials.json            
-ZAMZAM_CACHE     = zamzam_cache.json           
+CREDENTIALS_FILE = "credentials.json"            
+ZAMZAM_CACHE     = "zamzam_cache.json"           
 
 # Filter thresholds
 MAX_DE_RATIO       = 0.33   # Debt/Equity must be below this
